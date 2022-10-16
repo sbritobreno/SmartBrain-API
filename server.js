@@ -1,7 +1,10 @@
 const express = require('express');
+const bcrypt = require('bcrypt-nodejs');
+const cors = require('cors');
 
 const app = express();
 
+app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
@@ -11,6 +14,7 @@ const db = {
             id: '123',
             name: 'breno',
             email: 'breno@breno.com',
+            password: 'breno123',
             entries: 0,
             joined: new Date()
         },
@@ -18,6 +22,7 @@ const db = {
             id: '1243',
             name: 'jeff',
             email: 'jeff@jeff.com',
+            password: 'jeff123',
             entries: 0,
             joined: new Date()
         }
@@ -30,7 +35,7 @@ app.get('/', (req, res) => {
 
 app.post('/signin', (req, res) => {
     if (req.body.email === db.users[0].email && req.body.password === db.users[0].password) {
-        res.json('Success');
+        res.json('success');
     } else {
         res.status(400).json('Error logging in');
     }
@@ -78,6 +83,6 @@ app.put('/image', (req, res) => {
     }
 })
 
-app.listen(3000, () => {
-    console.log('App is running on port 3000');
+app.listen(5000, () => {
+    console.log('App is running on port 5000');
 });
