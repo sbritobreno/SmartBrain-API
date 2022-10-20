@@ -19,34 +19,9 @@ const database = knex({
     }
 });
 
-database.select('*').from('users').then(data => {
-    console.log(data);
-});
-
-const db = {
-    users: [
-        {
-            id: '123',
-            name: 'breno',
-            email: 'breno@breno.com',
-            password: 'breno123',
-            entries: 0,
-            joined: new Date()
-        },
-        {
-            id: '1243',
-            name: 'jeff',
-            email: 'jeff@jeff.com',
-            password: 'jeff123',
-            entries: 0,
-            joined: new Date()
-        }
-    ]
-}
-
-app.get('/', (req, res) => {
-    res.send(db.users);
-});
+// app.get('/', (req, res) => {
+//     res.send(database('users'));
+// });
 
 app.post('/signin', (req, res) => {
     if (req.body.email === db.users[0].email && req.body.password === db.users[0].password) {
@@ -57,39 +32,53 @@ app.post('/signin', (req, res) => {
 })
 
 app.post('/register', (req, res) => {
-    const {email, password, name} = req.body
-    database('users')
-        .returning('*')
-        .insert({
-            email: email,
-            name: name,
-            joined: new Date()
+    const { email, password, name } = req.body
+    const hash = bcrypt.hashSync(password);
+
+    database.transaction(trx => {
+        trx.insert({
+            hash: hash,
+            email: email
         })
-        .then(user => {
-            res.json(user[0]);
+        .into('login')
+        .returning('email')
+        .then(loginEmail => {
+            return trx('users')
+            .returning('*')
+            .insert({
+                email: loginEmail[0].email,
+                name: name,
+                joined: new Date()
+            })
+            .then(user => {
+                res.json(user[0]);
+            })
         })
-        .catch(err => res.status(400).json('unable to register'))
+        .then(trx.commit)
+        .catch(trx.rollback)
+    })
+    .catch(err => res.status(400).json('unable to register'))
 });
 
 app.get('/profile/:id', (req, res) => {
-    const {id} = req.params;
+    const { id } = req.params;
     database.select('*').from('users').where({
         id: id
     })
-    .then(user => {
-        if(user.length){
-            res.json(user[0]);
-        } else {
-            res.status(400).json('not found')
-        }
-    })
-    .catch(err => {
-        res.status(400).json('error getting user');
-    })
+        .then(user => {
+            if (user.length) {
+                res.json(user[0]);
+            } else {
+                res.status(400).json('not found')
+            }
+        })
+        .catch(err => {
+            res.status(400).json('error getting user');
+        })
 })
 
 app.put('/image', (req, res) => {
-    const {id} = req.body;
+    const { id } = req.body;
     database('users').where('id', '=', id)
         .increment('entries', 1)
         .returning('entries')
