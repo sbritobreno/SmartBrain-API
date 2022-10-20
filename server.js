@@ -19,9 +19,9 @@ const database = knex({
     }
 });
 
-// app.get('/', (req, res) => {
-//     res.send(database('users'));
-// });
+app.get('/', (req, res) => {
+    res.send('Success');
+});
 
 app.post('/signin', (req, res) => {
     database.select('email', 'hash').from('login')
