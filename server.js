@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt-nodejs');
 const cors = require('cors');
 const knex = require('knex');
+require('dotenv').config()
 
 const app = express();
 
@@ -14,7 +15,7 @@ const database = knex({
     connection: {
         host: 'localhost',
         user: 'postgres',
-        password: 'root123',
+        password: process.env.DATABASE_PASSWORD,
         database: 'smartbrain'
     }
 });
